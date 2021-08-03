@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+<title>{% block title %} Orders {% endblock %}</title>
+
+{% block content %}
+
+<h3 align='center'>Orders</h3>
+<div align='center'>
+    <a class="btn btn-primary" href="{{ url_for('views.close') }}" style="margin-right:5em">Close orders</a>
+    <a class="btn btn-primary" href="{{ url_for('views.adding_parts') }}" style="margin-left:5em" role="button">Add
+        Parts</a>
+</div>
+
+
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+<title>{% block title %} Orders {% endblock %}</title>
+
+{% block content %}
+
+<h3 align='center'>Orders</h3>
+<form method='POST'>
+    <div class='form-group'>
+        <label for="select_order">Add Parts</label>
+        <br />
+        <select name="select_order" id="select_order">
+            <option value="" disabled selected>Select an order</option>
+            {% for item in orders_list %}
+            <option value={{int(item.split()[0])}}>{{item}}</option>
+            {% endfor %}
+        </select>
+        <br />
+    </div>
+    <div class="form-group">
+        <label for="part1">System</label>
+        <br />
+        <select name="part1" id="part1" onchange='set_list()'>
+            <option value="" disabled selected>System</option>
+            {% for item in parts %}
+            {{item.replace(" ","&nbsp")}}
+            <option>{{item}}</option>
+            {% endfor %}
+        </select>
+        <br />
+        <label for="part2">Part</label>
+        <br />
+        <select name="part2" id="part2"></select>
+        <br />
+        <br />
+        <button type="submit" class="btn btn-primary" style="margin-left:1em">Add parts</button>
+
+
+    </div>
+</form>
+
+<table style="width:100%">
+    <tr>
+        <th>First name</th>
+        <th>Last name</th>
+        <th>Role</th>
+    </tr>
+    {% for item in order %}
+    <tr>
+        <td>{{order.order_number}}</td>
+        <td>{{order.service}}</td>
+        <td>{{order.status}}</td>
+        <td>{{order.parts}}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+{% endblock %}

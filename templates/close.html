@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+<title>{% block title %} Orders {% endblock %}</title>
+
+{% block content %}
+
+<h3 align='center'>Orders</h3>
+<form method='POST'>
+    <div class='form-group'>
+        <label for="select_order">Order</label>
+        <br />
+        <select name="select_order" id="select_order">
+            <option value="" disabled selected>Select an order</option>
+            {% for item in orders_list %}
+            <option value={{int(item.split()[0])}}>{{item}}</option>
+            {% endfor %}
+        </select>
+        <br />
+    </div>
+    <button type="submit" class="btn btn-primary" style="margin-right:1em">Close order</button>
+</form>
+
+{% endblock %}

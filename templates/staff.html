@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+<title>{% block title %} Staff Register {% endblock %}</title>
+
+{% block content %}
+
+<form method="POST">
+    <h3 align='center'>Add a staff member</h3>
+    <div class='form-group'>
+        <label for="name">First name</label>
+        <input type='text' class='form-control' name='name' required id='name' placeholder="First Name" />
+    </div>
+    <div class='form-group'>
+        <label for="surname">Last name</label>
+        <input type='text' class='form-control' name='surname' required id='surname' placeholder="Last Name" />
+    </div>
+    <div class='form-group'>
+        <label for="role">Role</label>
+        <input type='text' class='form-control' name='role' required id='role' placeholder="Role" />
+    </div>
+    <br />
+    <button type='submit' class="btn btn-primary">Add</button>
+</form>
+<br />
+<h3 align='center'>Delete a staff member</h3>
+<div class='form-group'>
+    <label for="delete_staff">Select your vehicle</label>
+    <br />
+    <select name="delete_staff" id="delete_staff" required>
+        <option value="" disabled selected>Select the employee</option>
+        {% for person in employee %}
+
+        <option value={{person.staff_id}}> {{str(person.staff_id) + " - " + person.staff_first_name + " " +
+            person.staff_surname}}
+        </option>
+        {% endfor %}
+    </select>
+    <br />
+    <br />
+    <button type="button" class="btn btn-primary" onClick="delete_staff()">Delete</button>
+</div>
+
+{% endblock %}
