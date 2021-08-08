@@ -56,3 +56,20 @@ function set_list() {
 
 
 };
+
+$(document).ready(function () {
+
+    $(function () {
+        $("#date").datepicker({
+            dateFormat: 'dd-mm-yy',
+            maxDate: '+60d',
+            minDate: '+1d',
+
+            //Block sundays 
+            beforeShowDay: function (date) {
+                var day = date.getDay();
+                return [(day != 0), ''];
+            }
+        });
+    });
+})

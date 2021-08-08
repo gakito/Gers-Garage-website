@@ -5,7 +5,6 @@ from flask_login import login_required, current_user
 import json
 from datetime import datetime
 from fpdf import FPDF
-import unicodedata
 
 views = Blueprint('views', __name__)
 
@@ -55,21 +54,21 @@ def booking():
         service = request.form.get('service')
         vehicle = Vehicle.query.filter_by(
             license_plate=(request.form.get('vehicle'))).first()
-        date = datetime.strptime(request.form.get('date'), "%Y-%m-%d")
+        date = datetime.strptime(request.form.get('date'), "%d-%m-%Y")
         comments = request.form.get('comments')
         price = services[service]
 
         # getting the day of the week
-        weekday = date.weekday()
+        #weekday = date.weekday()
         # querying all the bookings to check availability
         check_bookings = Booking.query.filter_by(date=date).all()
 
         if len(check_bookings) > 3:
             flash(
                 "Date not available. All the bookings for this day have been already filled.", category="error")
-        elif weekday == 6:
-            flash(
-                "The garage is closed on Sundays, please select another date.", category="error")
+        # elif weekday == 6:
+            # flash(
+            # "The garage is closed on Sundays, please select another date.", category="error")
         else:
             # assigning staffs automatically. it assigns the staff with less order
             if Booking.query.all():
@@ -254,14 +253,21 @@ def adding_parts():
         order_num = request.form.get('select_order')
         car_system = request.form.get('part1')
         part_added = request.form.get('part2')
+
+        # querying the order selected and the vehicle from the order
         pick_order = Order.query.filter_by(order_number=order_num).first()
+        vehicle = Vehicle.query.filter_by(
+            vehicle_id=pick_order.vehicle_id).first()
+
         # updating order parts
         if pick_order.parts == 'none':
             pick_order.parts = part_added
         else:
             pick_order.parts = pick_order.parts + ", " + part_added
-        # update order price
-        pick_order.price += parts[car_system][part_added]
+
+        # update order price. the price is set according to the make of the car following the multiplying fcator created
+        pick_order.price += parts[car_system][part_added] * \
+            cars_makes[vehicle.make]
         db.session.commit()
         return redirect(url_for('views.adding_parts'))
 
@@ -308,63 +314,63 @@ cars_makes = {
 
 parts = {
     'Air Conditioning': {
-        'AC Kit': 50, 'AC Condenser': 20, 'AC Compressor': 20, 'AC Evaporator': 10, 'AC Pressure Switch': 10
+        'AC Kit': 400, 'AC Condenser': 160, 'AC Compressor': 260, 'AC Evaporator': 100, 'AC Pressure Switch': 20
     },
     'Body': {
-        'Bonnet': 40, 'Bumper': 40, 'Door Handle': 0, 'Door Parts': 0, 'Headlights': 0, 'Radiator Grill': 0, 'Rear Lights': 0, 'Tailgate': 0, 'Wing Mirror': 0
+        'Bonnet': 100, 'Bumper': 140, 'Door Handle': 20, 'Door Parts': 100, 'Headlights': 100, 'Radiator Grill': 20, 'Rear Lights': 60, 'Tailgate': 200, 'Wing Mirror': 15
     },
     'Brake System': {
-        'Brake Kit': 0, 'ABS Sensor': 0, 'Brake Calipers': 0, 'Brake Discs': 0, 'Brake Drum': 0, 'Brake Fluid': 0, 'Brake Fluir Reservoir': 0, 'Brake Hose': 0, 'Brake Pads': 0, 'Brake Vacuum Pump': 0, 'Handbrake': 0
+        'Brake Kit': 400, 'ABS Sensor': 15, 'Brake Calipers': 80, 'Brake Discs': 18, 'Brake Drum': 40, 'Brake Fluid': 10, 'Brake Fluir Reservoir': 10, 'Brake Hose': 20, 'Brake Pads': 14, 'Brake Vacuum Pump': 300, 'Handbrake': 40
     },
     'Car Battery': {
-        '45Ah': 0, '60Ah': 0, '70Ah': 0, '74Ah': 0, '80Ah': 0, '95Ah': 0
+        '45Ah': 70, '60Ah': 80, '70Ah': 85, '74Ah': 89, '80Ah': 100, '95Ah': 120
     },
     'Clutch': {
-        'Clutch Kit': 0, 'Clutch Cable': 0, 'Clutch Flywheel': 0, 'Clutch Master Cylinder': 0, 'Clutch Plate': 0, 'Clutch Pressure Plate': 0, 'Clutch Slave Cylinder': 0,
+        'Clutch Kit': 250, 'Clutch Cable': 20, 'Clutch Flywheel': 98, 'Clutch Master Cylinder': 40, 'Clutch Plate': 40, 'Clutch Pressure Plate': 110, 'Clutch Slave Cylinder': 25
     },
     'Damping': {
-        'Spring Kit': 0, 'Suspension Kit': 0, 'Air Suspension': 0, 'Coil Springs': 0, 'Leaf Spring': 0, 'Shock Absorber': 0, 'Spring Cap': 0, 'Strut Mount': 0, 'Suspension Accumulator': 0
+        'Spring Kit': 140, 'Suspension Kit': 300, 'Air Suspension': 1500, 'Coil Springs': 60, 'Leaf Spring': 180, 'Shock Absorber': 80, 'Spring Cap': 10, 'Strut Mount': 30
     },
     'Electric System': {
-        'Alternator': 0, 'Alternator Regulator': 0, 'Engine Starter': 0, 'Headlight Leveling Motor': 0, 'Horn': 0, 'Starter Solenoid': 0,
+        'Alternator': 110, 'Alternator Regulator': 30, 'Engine Starter': 80, 'Headlight Leveling Motor': 40, 'Horn': 10, 'Starter Solenoid': 70
     },
     'Engine': {
-        'Camshaft': 0, 'Con Rod Bearing': 0, 'Crankcase Breather': 0, 'Crankshaft': 0, 'Crankshaft Bearing': 0, 'Cylinder Head': 0, 'Cylinder Head Bolts': 0, 'Engine Block': 0, 'Engine Mount': 0, 'Engine Oil': 0, 'Exhaust Valve': 0, 'Head Gasket Kit': 0, 'Inlet Valves': 0, 'Intake Manifold': 0, 'Mounting Kit Charger': 0, 'Oil Level Sensor': 0, 'Oil Pump': 0, 'Piston': 0, 'Piston Rings': 0, 'Rocker Arm': 0, 'Rocker Cover': 0, 'Secondary Air Pump': 0, 'Tappet': 0
+        'Camshaft': 2000, 'Con Rod Bearing': 30, 'Crankcase Breather': 10, 'Crankshaft': 100, 'Crankshaft Bearing': 10, 'Cylinder Head': 250, 'Cylinder Head Bolts': 50, 'Engine Block': 2000, 'Engine Mount': 40, 'Engine Oil': 10, 'Exhaust Valve': 120, 'Head Gasket Kit': 100, 'Inlet Valves': 180, 'Intake Manifold': 380, 'Mounting Kit Charger': 0, 'Oil Level Sensor': 5, 'Oil Pump': 15, 'Piston': 100, 'Piston Rings': 20, 'Rocker Arm': 10, 'Rocker Cover': 10, 'Secondary Air Pump': 15, 'Tappet': 30
     },
     'Exhaust System': {
-        'Catalytic Converter': 0, 'Catalytic Converter Mounting Kit': 0, 'Diesel Particulate Filter': 0, 'EGR Valve': 0, 'Exhaust Flex Pipe': 0, 'Exhaust Hanger': 0, 'Exhaust Heat Shield': 0, 'Exhaust Manifold': 0, 'Exhaust Manifold Mounting Kit': 0, 'Exhaust Mounting Kit': 0, 'Exhaust Pipe': 0, 'Front Silencer': 0, 'Lambda Sensor': 0, 'Middle Silencer': 0, 'Rear Silencer': 0, 'Silencer Mounting Kit': 0, 'Tailpipe': 0, 'Turbocharger': 0
+        'Catalytic Converter': 175, 'Catalytic Converter Mounting Kit': 300, 'Diesel Particulate Filter': 900, 'EGR Valve': 300, 'Exhaust Flex Pipe': 80, 'Exhaust Hanger': 20, 'Exhaust Heat Shield': 70, 'Exhaust Manifold': 150, 'Exhaust Manifold Mounting Kit': 280, 'Exhaust Mounting Kit': 300, 'Exhaust Pipe': 25, 'Front Silencer': 20, 'Lambda Sensor': 20, 'Middle Silencer': 20, 'Rear Silencer': 20, 'Silencer Mounting Kit': 50, 'Tailpipe': 25, 'Turbocharger': 60
     },
     'Filters': {
-        'Air Filter': 0, 'Fuel Filter': 0, 'Oil Filter': 0, 'Pollen Filter': 0, 'Sports Air Filter': 0
+        'Air Filter': 10, 'Fuel Filter': 30, 'Oil Filter': 25, 'Pollen Filter': 20, 'Sports Air Filter': 15
     },
     'Fuel System': {
-        'Accelerator Cable': 0, 'Carburetor Parts': 0, 'Fuel Cap': 0, 'Fuel Injectors': 0, 'Fuel Level Sensor': 0, 'Fuel Pressure Regulator': 0, 'Fuel Pressure Sensor': 0, 'Fuel Pump': 0, 'Fuel Tank': 0, 'High Pressure Fuel Pump': 0
+        'Accelerator Cable': 10, 'Carburetor Parts': 200, 'Fuel Cap': 5, 'Fuel Injectors': 90, 'Fuel Level Sensor': 20, 'Fuel Pressure Regulator': 45, 'Fuel Pressure Sensor': 28, 'Fuel Pump': 30, 'Fuel Tank': 20, 'High Pressure Fuel Pump': 50
     },
     'Heating': {
-        'Blower Control Unit': 0, 'Blower Motor Resistor': 0, 'Heater Blower Motor': 0, 'Heater Core': 0
+        'Blower Control Unit': 100, 'Blower Motor Resistor': 30, 'Heater Blower Motor': 40, 'Heater Core': 80
     },
     'Ignition': {
-        'Ignition Coil': 0, 'Ignition Leads': 0, 'Ignition Module': 0, 'Knock Sensor': 0, 'Spark Plug': 0
+        'Ignition Coil': 30, 'Ignition Leads': 30, 'Ignition Module': 60, 'Knock Sensor': 20, 'Spark Plug': 15
     },
     'Light Bulbs': {
-        'Fog Light Bulb': 0, 'Headlight Bulb': 0, 'Interior Lights': 0
+        'Fog Light Bulb': 16, 'Headlight Bulb': 12, 'Interior Lights': 5
     },
     'Pipes and Hoses': {
-        'Air Conditioning Pipe': 0, 'Brake Vacuum Hose': 0, 'Coolant Flange': 0, 'Fuel Hose': 0, 'Power Steering Pipe': 0, 'Radiator Hose': 0, 'Turbo Oil Feed Line': 0, 'Turbocharger Hose': 0
+        'Air Conditioning Pipe': 10, 'Brake Vacuum Hose': 15, 'Coolant Flange': 20, 'Fuel Hose': 20, 'Power Steering Pipe': 25, 'Radiator Hose': 30, 'Turbo Oil Feed Line': 20, 'Turbocharger Hose': 20
     },
     'Sensors': {
-        'ESP Sensor': 0, 'Fuel Temperature Sensor': 0, 'Idle Air Control Valve': 0, 'Intake Air Temperature Sensor': 0, 'Map Sensor': 0, 'Mass Air Flow Sensor': 0, 'Oil Temperature Sensor': 0, 'Temperature Sensor': 0, 'Tyre Pressure Sensor': 0
+        'ESP Sensor': 20, 'Fuel Temperature Sensor': 20, 'Idle Air Control Valve': 40, 'Intake Air Temperature Sensor': 20, 'Map Sensor': 20, 'Mass Air Flow Sensor': 20, 'Oil Temperature Sensor': 30, 'Temperature Sensor': 20, 'Tyre Pressure Sensor': 10
     },
     'Steering': {
-        'Hydraulic Oil': 0, 'Power Steering Oil': 0, 'Power Steering Pump': 0, 'Steering Angle Sensor': 0, 'Steering Column + Electric Power Steering': 0, 'Steering Stabilizer': 0
+        'Hydraulic Oil': 10, 'Power Steering Oil': 10, 'Power Steering Pump': 30, 'Steering Angle Sensor': 12, 'Steering Column + Electric Power Steering': 50, 'Steering Stabilizer': 30
     },
     'Suspension': {
-        'Beam Axle': 0, 'Control Arm': 0, 'Control Arm Repair Kit': 0, 'Differential': 0, 'Wheel Bearing': 0, 'Wheel Hub': 0, 'Wheel Spacers': 0
+        'Beam Axle': 400, 'Control Arm': 200, 'Control Arm Repair Kit': 300, 'Differential': 0, 'Wheel Bearing': 90, 'Wheel Hub': 50, 'Wheel Spacers': 40
     },
     'Transmission': {
-        'Automatic Transmission Filter': 0, 'Automatic Transmission Fluid': 0, 'Gearbox Mount': 0, 'Repair Kit Gear Lever': 0, 'Shifter Cable': 0, 'Speed Sensor': 0, 'Transmission Oil': 0
+        'Automatic Transmission Filter': 13, 'Automatic Transmission Fluid': 15, 'Gearbox Mount': 600, 'Repair Kit Gear Lever': 300, 'Shifter Cable': 80, 'Speed Sensor': 50, 'Transmission Oil': 15
     },
     'Tyres': {
-        'Conventional': 0, 'Off-Road': 0, 'Heavy Vehicles': 0, 'Snow': 0, 'Speeder': 0
+        'Conventional': 40, 'Off-Road': 60, 'Heavy Vehicles': 90, 'Snow': 150, 'Speeder': 200
     },
 }
