@@ -1,3 +1,4 @@
+//getting the staff data from the database and sending it to the backend to delete it from the database
 function delete_staff(staff_id) {
     var deleting_id = document.getElementById('delete_staff');
     staff_id = deleting_id.value
@@ -8,27 +9,6 @@ function delete_staff(staff_id) {
         window.location.href = "/staff";
     });
 }
-
-function type_selection() {
-    var type_selected = document.getElementById('type');
-    let mbike;
-    if (type_selected == 'Motorbike') {
-        mbike = true;
-    }
-    fetch("/vehicle_reg", {
-        method: "POST",
-        body: JSON.stringify(mbike)
-    })
-}
-
-// function select_parts(p1, p2) {
-//     var p1 = document.getElementById(p1);
-//     var p2 = document.getElementById(p2);
-//     p2.innerHTML = ""
-
-//     options = "{% for part in parts['" + p1.value + "'] %} <option value={{part}}>{{part}}</option> {% endfor %}"
-//     p2.innerHTML = options
-// }
 
 //function to dynamically change cars' parts in a dropdown menu. Got it on https://www.youtube.com/watch?v=I2dJuNwlIH0
 function set_list() {
@@ -57,13 +37,15 @@ function set_list() {
 
 };
 
+//jQuery to generate a Datepicker when making a booking
 $(document).ready(function () {
-
     $(function () {
+        //setting date format and the range of possible days
         $("#date").datepicker({
             dateFormat: 'dd-mm-yy',
             maxDate: '+60d',
             minDate: '+1d',
+            disableEntry: true,
 
             //Block sundays 
             beforeShowDay: function (date) {
@@ -73,3 +55,8 @@ $(document).ready(function () {
         });
     });
 })
+
+//automatically closes the messages shown to users
+setTimeout(function () {
+    $('.alert').fadeOut('fast');
+}, 4000);

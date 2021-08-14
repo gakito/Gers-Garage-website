@@ -8,70 +8,78 @@ from fpdf import FPDF
 
 views = Blueprint('views', __name__)
 
+# function created to check the size of a list
+
 
 def __len__(self):
     return len(self.name)
+
+# route that renders the home page
 
 
 @views.route('/', methods=['POST', 'GET'])
 @login_required
 def home():
-
     return render_template('home.html', user=current_user)
 
 
 @views.route('vehicle_reg', methods=['GET', 'POST'])
 @login_required
 def vehicle_reg():
-
-    moto = False
-    type_selected = request.form.get('type')
-    if type_selected == "Motorbike":
-        moto = True
-
+    # dealing with post request
     if request.method == 'POST':
+        # getting data from the user input
         make = request.form.get('make')
         license = request.form.get('license')
         type = request.form.get('type')
         engine = request.form.get('engine')
+        cars = Vehicle.query.filter_by(license_plate=license).first()
 
-        new_car = Vehicle(make=make, license_plate=license,
-                          engine_type=engine, type=type, user_id=current_user.id)
-        db.session.add(new_car)
-        db.session.commit()
-        flash("Vehicle registred!", category="success")
+        # if statement checks if there is a vehicle registered with the input licence plate
+        if cars:
+            flash(
+                "Licence plate registered to other car. Please try again.", category='error')
+        else:
+            # saving data to the database
+            new_car = Vehicle(make=make, license_plate=license,
+                              engine_type=engine, type=type, user_id=current_user.id)
+            db.session.add(new_car)
+            db.session.commit()
 
-    return render_template('vehicle_reg.html', user=current_user, vehicles_type_list=vehicles_type_list, bikes=bikes, cars_makes=cars_makes, eng_type=eng_type, moto=moto)
+            # notificating the user the registration was successful
+            flash("Vehicle registred!", category="success")
+
+    return render_template('vehicle_reg.html', user=current_user, vehicles_type_list=vehicles_type_list, bikes=bikes, cars_makes=cars_makes, eng_type=eng_type)
 
 
 @views.route('booking', methods=['GET', 'POST'])
 @login_required
 def booking():
 
+    # querying all the vehicles registered for the user logged in
     car_list = Vehicle.query.filter_by(user_id=current_user.id).all()
 
     if request.method == 'POST':
         service = request.form.get('service')
+        # selecting the car desired filtering the PK for the vehicles' table
         vehicle = Vehicle.query.filter_by(
             license_plate=(request.form.get('vehicle'))).first()
         date = datetime.strptime(request.form.get('date'), "%d-%m-%Y")
         comments = request.form.get('comments')
+        # getting the price of the service
         price = services[service]
 
-        # getting the day of the week
-        #weekday = date.weekday()
-        # querying all the bookings to check availability
+        # querying all the bookings to check availability on the date desired
         check_bookings = Booking.query.filter_by(date=date).all()
 
+        # limiting the number of bookings in 4
         if len(check_bookings) > 3:
             flash(
                 "Date not available. All the bookings for this day have been already filled.", category="error")
-        # elif weekday == 6:
-            # flash(
-            # "The garage is closed on Sundays, please select another date.", category="error")
         else:
-            # assigning staffs automatically. it assigns the staff with less order
+            # assigning staffs automatically. it assigns the staff with the least order
             if Booking.query.all():
+                # setting the booking id as the last one + 1
                 book_id = Booking.query.order_by(
                     Booking.booking_id.desc()).first().booking_id + 1
 
@@ -80,8 +88,9 @@ def booking():
                     return min(lst, key=lambda x: (lst.count(x), lst[::-1].index(x)))
                 # querying all the orders
                 all_orders = Order.query.all()
-                # creating the list
+                # creating a list to sort the orders
                 staffs = []
+                # staffs.append(Staff.query.all().staff_id)
                 # setting the values on the list
                 for order in all_orders:
                     staffs.append(order.staff_id)
@@ -90,15 +99,19 @@ def booking():
             else:
                 book_id = 1
                 assigned_staff = 1
+
             # creating the booking
             new_booking = Booking(date=date)
             db.session.add(new_booking)
             db.session.commit()
+
             # creating the order
             new_order = Order(service=service, vehicle_id=vehicle.vehicle_id,
                               booking_id=book_id, price=price*cars_makes[vehicle.make], parts='none', comments=comments, status='active', staff_id=assigned_staff)
             db.session.add(new_order)
             db.session.commit()
+
+            flash("Service booked!", category="success")
 
     return render_template('booking.html', user=current_user, cars=car_list, services=services, str=str)
 
@@ -106,12 +119,14 @@ def booking():
 @views.route('staff', methods=['GET', 'POST'])
 @login_required
 def staff():
-
+    # page restricted to the admin
     if current_user.id != 1:
         return redirect(url_for("views.home"))
 
+    # getting all the employees registered
     employee = Staff.query.all()
 
+    # adding a staff
     if request.method == 'POST':
         name = request.form.get('name')
         surname = request.form.get('surname')
@@ -121,6 +136,7 @@ def staff():
                           role=role)
         db.session.add(new_staff)
         db.session.commit()
+        flash("Staff added.", category="success")
 
     return render_template('staff.html', user=current_user, employee=employee, str=str)
 
@@ -128,6 +144,7 @@ def staff():
 @views.route('delete-staff', methods=['POST'])
 @login_required
 def delete_staff():
+    # page restricted to the admin
     if current_user.id != 1:
         return redirect(url_for("views.home"))
 
@@ -148,6 +165,8 @@ def delete_staff():
         flash("Staff deleted.", category='success')
     return jsonify({})
 
+# 'bridge' page to close order or add part
+
 
 @views.route('orders', methods=['GET', 'POST'])
 @login_required
@@ -158,12 +177,14 @@ def orders():
 @views.route('close', methods=['POST', 'GET'])
 @login_required
 def close():
+    # page restricted to the admin
     if current_user.id != 1:
         return redirect(url_for("views.home"))
 
     order = Order.query.all()
     orders_list = []
 
+    # creating the list of active orders
     for o in order:
         if o.status == 'active':
             num = o.order_number
@@ -187,7 +208,7 @@ def close():
         get_booking = Booking.query.filter_by(
             booking_id=pick_order.booking_id).first()
 
-        # creating the invoice
+        # creating the invoice automatically when an order is closed
         pdf = FPDF('P', 'mm', "A5")
         pdf.add_page()
         pdf.set_font('helvetica', '', 12)
@@ -229,6 +250,7 @@ def close():
 @ views.route('parts', methods=['POST', 'GET'])
 @ login_required
 def adding_parts():
+    # page restricted to the admin
     if current_user.id != 1:
         return redirect(url_for("views.home"))
 

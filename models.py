@@ -2,6 +2,8 @@ from . import db
 from flask_login import UserMixin
 from sqlalchemy.sql import func
 
+# user table
+
 
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
@@ -12,6 +14,8 @@ class User(db.Model, UserMixin):
     password = db.Column(db.String(150))
     vehicle = db.relationship('Vehicle')
 
+# table of vehicles registered
+
 
 class Vehicle(db.Model):
     vehicle_id = db.Column(db.Integer, primary_key=True)
@@ -21,6 +25,8 @@ class Vehicle(db.Model):
     engine_type = db.Column(db.String(150))
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     order = db.relationship('Order')
+
+# table of orders
 
 
 class Order(db.Model):
@@ -35,6 +41,8 @@ class Order(db.Model):
     staff_id = db.Column(db.Integer, db.ForeignKey('staff.staff_id'))
     booking_id = db.Column(db.Integer, db.ForeignKey('booking.booking_id'))
 
+# staff table
+
 
 class Staff(db.Model):
     staff_id = db.Column(db.Integer, primary_key=True)
@@ -42,6 +50,8 @@ class Staff(db.Model):
     staff_surname = db.Column(db.String(150))
     role = db.Column(db.String(150))
     order = db.relationship('Order')
+
+# table of all bookings made
 
 
 class Booking(db.Model):
