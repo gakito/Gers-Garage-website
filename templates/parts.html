@@ -39,20 +39,4 @@
     </div>
 </form>
 
-<table style="width:100%">
-    <tr>
-        <th>First name</th>
-        <th>Last name</th>
-        <th>Role</th>
-    </tr>
-    {% for item in order %}
-    <tr>
-        <td>{{order.order_number}}</td>
-        <td>{{order.service}}</td>
-        <td>{{order.status}}</td>
-        <td>{{order.parts}}</td>
-    </tr>
-    {% endfor %}
-</table>
-
 {% endblock %}
